@@ -36,6 +36,7 @@
 #endif
 
 /* helper: string concatenation */
+static
 char *concat(char *a, char *b) {
         char *result;
         int alen, blen;
@@ -52,6 +53,7 @@ char *concat(char *a, char *b) {
 }
 
 /* sprite stuff */
+static
 SDL_Surface *sprite(char **search_path, char *file) {
 	SDL_Surface *bmp;
 	SDL_Surface *result;
@@ -79,6 +81,7 @@ SDL_Surface *sprite(char **search_path, char *file) {
 	return result;
 }
 
+static
 void show_sprite(SDL_Surface *screen, SDL_Surface *spr, int x, int y) {
 	SDL_Rect rect;
 	rect.x = x;
@@ -89,6 +92,7 @@ void show_sprite(SDL_Surface *screen, SDL_Surface *spr, int x, int y) {
 }
 
 /* number stuff */
+static
 SDL_Surface **number_init(char **path) {
 	int i;
 	char file[16];
@@ -100,12 +104,14 @@ SDL_Surface **number_init(char **path) {
 	return numbers;
 }
 
+static
 void exit_number(SDL_Surface **numbers) {
 	int i;
 	for (i=0; i<10; i++) SDL_FreeSurface(numbers[i]);
 	free(numbers);
 }
 
+static
 void show_number(SDL_Surface *screen, SDL_Surface **numbers, int number, int x, int y) {
 	int c, w, xpos;
 	int n, d;
@@ -146,22 +152,27 @@ typedef struct Field {
 #define OFFSET_X (400 - (FIELD_WIDTH + GAP_X) * 3)
 #define OFFSET_Y (300 - (FIELD_HEIGHT + GAP_Y) * 3)
 
+static
 int field2screen_x(int x, int y) { 
 	return OFFSET_X + (x * (FIELD_WIDTH + GAP_X)); 
 }
 
+static
 int field2screen_y(int x, int y) {
 	return OFFSET_Y + (y * (FIELD_HEIGHT + GAP_Y));
 }
 
+static
 int screen2field_x(int x, int y) {
 	return (x - OFFSET_X) / (FIELD_WIDTH + GAP_X);
 }
 
+static
 int screen2field_y(int x, int y) { 
 	return (y - OFFSET_Y) / (FIELD_HEIGHT + GAP_Y); 
 }
 
+static
 Field *field_init(char **path, SDL_Surface **numbers) {
 	int i;
 	Field *field = (Field *)malloc(sizeof(Field));
@@ -178,6 +189,7 @@ Field *field_init(char **path, SDL_Surface **numbers) {
 	return field;
 }
 
+static
 void exit_field(Field *field) {
 	SDL_FreeSurface(field->red);
 	SDL_FreeSurface(field->green);
@@ -185,6 +197,7 @@ void exit_field(Field *field) {
 	free(field);
 }
 
+static
 void show_field(SDL_Surface *screen, Field *field, int num, int x, int y) {
 	SDL_Surface *background;
 	int xpos, ypos;
@@ -201,17 +214,20 @@ void show_field(SDL_Surface *screen, Field *field, int num, int x, int y) {
 	SDL_UpdateRect(screen, xpos, ypos, FIELD_WIDTH, FIELD_HEIGHT);
 }
 
+static
 int get_field(Field *field, int x, int y) {
 	if (x < 0 || x >= SIZE_X ||
 	    y < 0 || y >= SIZE_Y) return NAN;
 	return field->fields[y * SIZE_X + x];
 }
 
+static
 int get_field_value(Field *field, int x, int y) { 
 	int result = get_field(field, x, y);
 	return (result == NAN) ? 0 : result;
 }
 
+static
 int set_field(Field *field, int x, int y) {
 	int num;
 	if (x < 0 || x >= SIZE_X ||
@@ -232,6 +248,7 @@ int set_field(Field *field, int x, int y) {
 	return num;
 }
 
+static
 int turn(SDL_Surface *screen, Field *field, int x, int y) {
 	int num;
 	if (field->open_fields == 0) return 1;
@@ -249,6 +266,7 @@ typedef struct {
 	SDL_Surface *visual;
 } Cursor;
 
+static
 Cursor *cursor_init(char **path) {
 	Cursor *result = (Cursor *)malloc(sizeof(Cursor));
 	result->x = 3;
@@ -257,11 +275,13 @@ Cursor *cursor_init(char **path) {
 	return result;
 }
 
+static
 void exit_cursor(Cursor *cursor) {
 	SDL_FreeSurface(cursor->visual);
 	free(cursor);
 }
 
+static
 void show_cursor(SDL_Surface *screen, Cursor *c) {
 	int x = field2screen_x(c->x, c->y) + (FIELD_WIDTH - c->visual->w) / 2;
 	int y = field2screen_y(c->x, c->y) + (FIELD_HEIGHT - c->visual->h) / 2;
@@ -269,10 +289,12 @@ void show_cursor(SDL_Surface *screen, Cursor *c) {
 	SDL_UpdateRect(screen, x, y, c->visual->w, c->visual->h);
 }
 
+static
 void hide_cursor(SDL_Surface *s, Field *field, Cursor *c) {
 	show_field(s, field, get_field(field, c->x, c->y), c->x, c->y);
 }
 
+static
 void move_cursor(SDL_Surface *screen, Field *field, Cursor *cursor, 
 	int dx, int dy) {
 	hide_cursor(screen, field, cursor);
@@ -287,6 +309,7 @@ void move_cursor(SDL_Surface *screen, Field *field, Cursor *cursor,
 }
 
 /* engine stuff */
+static
 SDL_Surface *engine_init(int argc, char *argv[]) {
 	int videoflags = SDL_HWSURFACE | SDL_ANYFORMAT;
 	int width = 800;
@@ -306,6 +329,7 @@ SDL_Surface *engine_init(int argc, char *argv[]) {
 	return screen;
 }
 
+static
 int handle_event(SDL_Event *event, SDL_Surface *screen, 
 	Field *field, Cursor *cursor) {
 /* returns 1 if finished, 0 otherwise */
@@ -351,6 +375,7 @@ int handle_event(SDL_Event *event, SDL_Surface *screen,
 	}
 }
 
+static
 int engine_loop(SDL_Surface *screen, Field *field, Cursor *cursor) {
 	int finished = 0;
 	SDL_Event event;
