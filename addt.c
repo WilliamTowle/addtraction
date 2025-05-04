@@ -19,7 +19,11 @@
  */
 
 #include "stdio.h"
+#ifdef __linux
+#include "SDL.h"
+#else
 #include "SDL/SDL.h"
+#endif
 
 #define ADDTRACTION_VERSION "0.001"
 #define SIZE_X 6
