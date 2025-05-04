@@ -336,6 +336,8 @@ int handle_event(SDL_Event *event, SDL_Surface *screen,
 		case SDLK_RETURN:
 		case SDLK_KP_ENTER:
 			return turn(screen, field, cursor->x, cursor->y);
+		default:
+			return 0;
 		}
 	case SDL_MOUSEBUTTONDOWN:
 		if (field->open_fields <= 0) return 1;
