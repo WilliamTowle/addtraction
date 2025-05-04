@@ -57,7 +57,7 @@ char *concat(const char *a, const char *b) {
 /* sprite stuff */
 static
 SDL_Surface *sprite(const char **search_path, const char *file) {
-	SDL_Surface *bmp;
+	SDL_Surface *bmp = NULL;
 	SDL_Surface *result;
 	char *location;
 	int i;
