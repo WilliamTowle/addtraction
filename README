@@ -1,0 +1,63 @@
+AddTraction 0.001 - a small boardgame (C) 2004 by Andre Kloss
+=============================================================
+
+Welcome to AddTraction Version 0.001. This text will explain what the 
+game is about and how you get it up and running. Also take a look at
+COPYING if you have not yet seen the GPL and want to know what you are
+permitted to do with this stuff besides playing.
+
+The Game
+--------
+Two players ("red" and "green" take their turns on a 6x6 board. In the
+beginning the board is empty except for a red "1" in the upper left and
+a green "1" in the lower right.
+
+Making a turn means setting one field of the board. Setting a field
+makes it assume the sum of the points of the 8 surrounding fields, e. g.
+
+		1  1  -			1  1  -
+		2  *  -		=>	2  4  -
+		-  -  -			-  -  -
+
+But there is a catch: If the field is of the opponent's color, their
+score is subtracted rather than added. If the resulting score is
+positive, the field will get your color, else your opponent's color.
+The same happens to the global score, which is just a colored difference
+of the score of all fields on the board.
+
+If the score in the end is red, red wins. If it is green, green wins. If
+it is black (0), it is a draw. Have fun!
+
+Oh, and if you have enough of it before the game is over, just press 'q' 
+or 'ESC', or you can just close the window. Else, if all fields are 
+filled, the program will exit on the next mouse button oder key press.
+
+Requirements
+------------
+This game requires libSDL (http://www.libsdl.org) - tested with version
+1.2.6, but it should probably run with any version since 1.something.
+The window resolution is (for now) set fixed at 800x600 pixels at 16bpp.
+I have not tested what SDL does to a screen with lower resolutions.
+
+Installation
+------------
+type (as root, preferably)
+	make && make install
+on the console. It's that simple. The bitmaps will go into
+/usr/share/games/addt/, the executable into /usr/bin. You can overwrite
+these defaults by setting BITMAP_PATH and INSTALL_PATH, respectively.
+For example, if you are not root, you may want to do this:
+	make && make install INSTALL_PATH=~ BITMAP_PATH=~/.addt/
+This will install AddTraction directly into your home directory.
+make uninstall (be sure to use the same path settings) will delete 
+AddTraction from your system.
+
+
+Notes
+-----
+There is also a lua version of the game (addt.lua). This was the very
+initial version, as I tried to prototype the game using lua and luaSDL.
+It has worked very good for me, unless the event handling, which suffers
+from an error in luaSDL. I will probably test new features (for example
+computer opponents) in lua first, as it is faster to code in.
+Look into TODO in this directory to see what I am up to.

@@ -1,0 +1,30 @@
+Todo  
+----
+The following steps are listed by priority:
+
+Control:
+1. Factor out player, create a generic interface (probably callback)
+   Mouse Player, Keyboard Player
+2. Create an option panel for player/gfx control
+
+Graphics:
+1. Accept different screen sizes (crop fields, resize fonts)
+2. Highlight fields that can be set (using alpha?)
+3. Fullscreen option
+4. Use alpha effect for coloring fields (shave 24k off)
+5. Optionally use SDL_image and jpgs (to make the download smaller)
+
+Network:
+1. Accept network players (using generic interface)
+   inet.h or SDL_net? Use TCP/IP with small ascii protocol
+2. Create a no-graphics server
+
+AI:
+1. Create stupid computer opponents (using generic interface)
+2. Create brute force minimax opponent using score as rating
+3. Try out more complex rating function
+
+Saving and Loading, Replay:
+1. Create ascii file format for games (probably using A1..F6 as fields)
+2. Create replay function
+
