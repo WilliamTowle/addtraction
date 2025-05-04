@@ -39,7 +39,7 @@
 
 /* helper: string concatenation */
 static
-char *concat(char *a, char *b) {
+char *concat(const char *a, const char *b) {
         char *result;
         int alen, blen;
         if (a == NULL) return b? strdup(b) : NULL;
@@ -56,7 +56,7 @@ char *concat(char *a, char *b) {
 
 /* sprite stuff */
 static
-SDL_Surface *sprite(char **search_path, char *file) {
+SDL_Surface *sprite(const char **search_path, const char *file) {
 	SDL_Surface *bmp;
 	SDL_Surface *result;
 	char *location;
@@ -95,7 +95,7 @@ void show_sprite(SDL_Surface *screen, SDL_Surface *spr, int x, int y) {
 
 /* number stuff */
 static
-SDL_Surface **number_init(char **path) {
+SDL_Surface **number_init(const char **path) {
 	int i;
 	char file[16];
 	SDL_Surface **numbers = (SDL_Surface **)malloc(sizeof(SDL_Surface *)*10);
@@ -175,7 +175,7 @@ int screen2field_y(int x, int y) {
 }
 
 static
-Field *field_init(char **path, SDL_Surface **numbers) {
+Field *field_init(const char **path, SDL_Surface **numbers) {
 	int i;
 	Field *field = (Field *)malloc(sizeof(Field));
 	field->red = sprite(path, "red.bmp");
@@ -269,7 +269,7 @@ typedef struct {
 } Cursor;
 
 static
-Cursor *cursor_init(char **path) {
+Cursor *cursor_init(const char **path) {
 	Cursor *result = (Cursor *)malloc(sizeof(Cursor));
 	result->x = 3;
 	result->y = 3;
@@ -390,7 +390,7 @@ int engine_loop(SDL_Surface *screen, Field *field, Cursor *cursor) {
 
 int main(int argc, char *argv[]) {
 	int x, y;
-	char *path[]		= {BITMAP_PATH, "bmps/", 0};
+	const char *path[]	= {BITMAP_PATH, "bmps/", 0};
 	SDL_Surface *screen 	= engine_init(argc, argv);
 	SDL_Surface **numbers 	= number_init(path);
 	SDL_Surface *player	= sprite(path, "player.bmp");
