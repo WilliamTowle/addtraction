@@ -25,6 +25,8 @@
 #include "SDL/SDL.h"
 #endif
 
+#include <string.h>
+
 #define ADDTRACTION_VERSION "0.001"
 #define SIZE_X 6
 #define SIZE_Y 6
@@ -40,16 +42,16 @@ static
 char *concat(char *a, char *b) {
         char *result;
         int alen, blen;
-	if (a == NULL) return b;
-	if (b == NULL) return a;
+        if (a == NULL) return b? strdup(b) : NULL;
+        if (b == NULL) return a? strdup(a) : NULL;
         alen = strlen(a);
         blen = strlen(b);
         result = (char *)malloc(sizeof(char) * (alen+blen+1));
         if (result == NULL) return NULL; 
-        memcpy((void *)result, (const void *)a, alen);
-        memcpy(((void *)result) + alen, (const void *)b, blen);
-	result[alen+blen] = '\0';
-	return result;
+        memcpy(result, a, alen);
+        memcpy(result + alen, b, blen);
+        result[alen+blen] = '\0';
+        return result;
 }
 
 /* sprite stuff */
