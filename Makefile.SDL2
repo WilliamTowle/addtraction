@@ -1,0 +1,56 @@
+#!/usr/bin/make
+
+## Makefile for toolchain with SDL 2.x
+## Homepage: https://www.libsdl.org/index.php
+
+
+.PHONY: default
+default: all
+
+
+DIR_DOWNLOADS=${CURDIR}/download
+DIR_STAGING=${CURDIR}/staging
+DIR_TOOLCHAIN=${CURDIR}/toolchain
+
+#
+
+# v2.32.6 from May 2025
+SDL_VERSION?=2.32.6
+
+SDL_SRC=${DIR_DOWNLOADS}/SDL2-${SDL_VERSION}.tar.gz
+SDL_URL=http://www.libsdl.org/release/$(notdir ${SDL_SRC})
+SDL_TEMPDIR=${DIR_STAGING}/SDL2-${SDL_VERSION}
+
+
+${DIR_DOWNLOADS}: ; @mkdir -p $@
+${DIR_STAGING}: ; @mkdir -p $@
+${DIR_TOOLCHAIN}: ; @mkdir -p $@
+
+
+.PHONY: toolchain-sdl
+toolchain-sdl: | ${DIR_DOWNLOADS} ${DIR_STAGING} ${DIR_TOOLCHAIN}
+	[ -r ${SDL_SRC} ] || wget ${SDL_URL} -O ${SDL_SRC}
+	[ -d ${SDL_TEMPDIR} ] || { cd ${DIR_STAGING} && tar xvzf ${SDL_SRC} ; }
+	[ -r ${SDL_TEMPDIR}/config.log ] || { cd ${SDL_TEMPDIR} && ./configure --prefix=${DIR_TOOLCHAIN} --enable-video-x11 ; }
+	[ -r ${SDL_TEMPDIR}/src/video/x11/SDL_x11sym.h.OLD ] || { \
+		cd ${SDL_TEMPDIR} && \
+		mv src/video/x11/SDL_x11sym.h src/video/x11/SDL_x11sym.h.OLD && \
+		cat src/video/x11/SDL_x11sym.h.OLD \
+			| sed '/_XData32/ s/register long \*/_Xconst long */' \
+			> src/video/x11/SDL_x11sym.h ;\
+		}
+	[ -r ${SDL_TEMPDIR}/sdl-config ] || { cd ${SDL_TEMPDIR} && make ; }
+	[ -r ${DIR_TOOLCHAIN}/bin/sdl2-config ] || { cd ${SDL_TEMPDIR} && make install ; }
+
+
+.PHONY: all
+all:: toolchain-sdl
+
+.PHONY: clean
+clean::
+	-rm -rf ${DIR_STAGING}
+	-rm -rf ${DIR_TOOLCHAIN}
+
+.PHONY: distclean
+distclean:: clean
+	-rm -rf ${DIR_DOWNLOADS}
