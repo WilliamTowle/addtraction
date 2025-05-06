@@ -72,19 +72,34 @@ SDL_Surface *sprite(const char **search_path, const char *file) {
 			SDL_GetError());
 		return NULL;			
 	}
+#if SDL_MAJOR_VERSION < 2	/* surface, flag, key */
 	SDL_SetColorKey(bmp, (SDL_SRCCOLORKEY|SDL_RLEACCEL), 0);
+#else	/* flag now boolean, "enable color key" */
+	SDL_SetColorKey(bmp, SDL_TRUE, 0);
+#endif
+#if SDL_MAJOR_VERSION < 2
 	result = SDL_DisplayFormat(bmp);
 	SDL_FreeSurface(bmp);
 	if (result == NULL) {
-		fprintf(stderr, "Couldn't convert %s: %s", file, 
+		fprintf(stderr, "Couldn't convert %s: %s", file,
 			SDL_GetError());
 		return NULL;
 	}
+#else	/* SDL_{ConvertSurfaceFormat|CreateTextureFromSurface}() here? */
+	result = SDL_ConvertSurfaceFormat(bmp, SDL_PIXELFORMAT_ARGB8888, 0);
+	SDL_FreeSurface(bmp);
+	if (result == NULL) {
+		fprintf(stderr, "Couldn't convert %s: %s", file,
+			SDL_GetError());
+		return NULL;
+	}
+#endif
 	return result;
 }
 
 static
-void show_sprite(SDL_Surface *screen, SDL_Surface *spr, int x, int y) {
+void show_sprite(SDL_Surface *screen, SDL_Surface *spr, int x, int y)
+{
 	SDL_Rect rect;
 	rect.x = x;
 	rect.y = y;
@@ -114,7 +129,8 @@ void exit_number(SDL_Surface **numbers) {
 }
 
 static
-void show_number(SDL_Surface *screen, SDL_Surface **numbers, int number, int x, int y) {
+void show_number(SDL_Surface *screen, SDL_Surface **numbers, int number, int x, int y)
+{
 	int c, w, xpos;
 	int n, d;
 	Uint8 digits[20]; /* think big :) */
@@ -200,7 +216,8 @@ void exit_field(Field *field) {
 }
 
 static
-void show_field(SDL_Surface *screen, Field *field, int num, int x, int y) {
+void show_field(SDL_Surface *screen, Field *field, int num, int x, int y)
+{
 	SDL_Surface *background;
 	int xpos, ypos;
 	xpos = field2screen_x(x, y);
@@ -213,7 +230,9 @@ void show_field(SDL_Surface *screen, Field *field, int num, int x, int y) {
 	if (num != INVALID_FIELD_VALUE)
 		show_number(screen, field->numbers, abs(num), 
 			xpos + FIELD_WIDTH / 2, ypos + FIELD_HEIGHT / 2);
+#if SDL_MAJOR_VERSION < 2
 	SDL_UpdateRect(screen, xpos, ypos, FIELD_WIDTH, FIELD_HEIGHT);
+#endif
 }
 
 static
@@ -251,7 +270,12 @@ int set_field(Field *field, int x, int y) {
 }
 
 static
-int turn(SDL_Surface *screen, Field *field, int x, int y) {
+#if SDL_MAJOR_VERSION < 2
+int turn(SDL_Surface *screen, Field *field, int x, int y)
+#else
+int turn(SDL_Window *window, SDL_Surface *screen, Field *field, int x, int y)
+#endif
+{
 	int num;
 	if (field->open_fields == 0) return 1;
 	num = set_field(field, x, y);
@@ -259,6 +283,10 @@ int turn(SDL_Surface *screen, Field *field, int x, int y) {
 	show_field(screen, field, num, x, y);
 	show_field(screen, field, field->score, 7, 0);		
 	show_field(screen, field, field->player, 7, 5);
+#if ! (SDL_MAJOR_VERSION < 2)
+	SDL_BlitSurface(screen, NULL, SDL_GetWindowSurface(window), NULL);
+	SDL_UpdateWindowSurface(window);
+#endif
 	return 0;
 }
 
@@ -284,56 +312,122 @@ void exit_cursor(Cursor *cursor) {
 }
 
 static
-void show_cursor(SDL_Surface *screen, Cursor *c) {
+#if SDL_MAJOR_VERSION < 2
+void show_cursor(SDL_Surface *screen, Cursor *c)
+#else
+void show_cursor(SDL_Window *window, SDL_Surface *screen, Cursor *c)
+#endif
+{
 	int x = field2screen_x(c->x, c->y) + (FIELD_WIDTH - c->visual->w) / 2;
 	int y = field2screen_y(c->x, c->y) + (FIELD_HEIGHT - c->visual->h) / 2;
 	show_sprite(screen, c->visual, x, y);
+#if SDL_MAJOR_VERSION < 2
 	SDL_UpdateRect(screen, x, y, c->visual->w, c->visual->h);
+#else
+	SDL_BlitSurface(screen, NULL, SDL_GetWindowSurface(window), NULL);
+	SDL_UpdateWindowSurface(window);
+#endif
 }
 
 static
-void hide_cursor(SDL_Surface *s, Field *field, Cursor *c) {
+#if SDL_MAJOR_VERSION < 2
+void hide_cursor(SDL_Surface *s, Field *field, Cursor *c)
+#else
+void hide_cursor(SDL_Window *w, SDL_Surface *s, Field *field, Cursor *c)
+#endif
+{
 	show_field(s, field, get_field(field, c->x, c->y), c->x, c->y);
+#if ! (SDL_MAJOR_VERSION < 2)
+	SDL_BlitSurface(s, NULL, SDL_GetWindowSurface(w), NULL);
+	SDL_UpdateWindowSurface(w);
+#endif
 }
 
 static
+#if SDL_MAJOR_VERSION < 2
 void move_cursor(SDL_Surface *screen, Field *field, Cursor *cursor, 
-	int dx, int dy) {
+	int dx, int dy)
+#else
+void move_cursor(SDL_Window *window, SDL_Surface *screen, Field *field, Cursor *cursor,
+	int dx, int dy)
+#endif
+{
+#if SDL_MAJOR_VERSION < 2
 	hide_cursor(screen, field, cursor);
+#else
+	hide_cursor(window, screen, field, cursor);
+#endif
 	cursor->x += dx;
 	cursor->y += dy;
 	if (cursor->x < 0) cursor->x = 0;
 	if (cursor->y < 0) cursor->y = 0;
 	if (cursor->x >= SIZE_X) cursor->x = SIZE_X-1;
 	if (cursor->y >= SIZE_Y) cursor->y = SIZE_Y-1;
+#if SDL_MAJOR_VERSION < 2
 	show_cursor(screen, cursor);
+#else
+	show_cursor(window, screen, cursor);
+#endif
 	printf("(%i,%i)\n", cursor->x, cursor->y);
 }
 
 /* engine stuff */
 static
-SDL_Surface *engine_init(int argc, char *argv[]) {
+#if SDL_MAJOR_VERSION < 2
+SDL_Surface *engine_init(int argc, char *argv[])
+#else
+SDL_Window *engine_init(int argc, char *argv[])
+#endif
+{
+#if SDL_MAJOR_VERSION < 2
 	int videoflags = SDL_HWSURFACE | SDL_ANYFORMAT;
+#endif
 	int width = 800;
 	int height = 600;
+#if SDL_MAJOR_VERSION < 2
 	int bpp = 16;
 	SDL_Surface *screen;
+#else
+	SDL_Window *window;
+#endif
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 		fprintf(stderr,"Couldn't initialize SDL: %s\n", SDL_GetError());
 		exit(1);
 	}
+#if SDL_MAJOR_VERSION < 2
 	screen = SDL_SetVideoMode(width, height, bpp, videoflags);
 	if (!screen) {
 		fprintf(stderr,"Couldn't set video mode: %s\n", SDL_GetError());
 		exit(2);
 	}
+#else
+	window = SDL_CreateWindow("AddTraction",
+		SDL_WINDOWPOS_UNDEFINED,
+		SDL_WINDOWPOS_UNDEFINED,
+		width, height,
+		SDL_WINDOW_FULLSCREEN_DESKTOP);
+	if (!window) {
+		fprintf(stderr,"Couldn't create window: %s\n", SDL_GetError());
+		exit(2);
+	}
+#endif
+#if SDL_MAJOR_VERSION < 2
 	SDL_WM_SetCaption("AddTraction", "AddTraction");
 	return screen;
+#else
+	return window;
+#endif
 }
 
 static
+#if SDL_MAJOR_VERSION < 2
 int handle_event(SDL_Event *event, SDL_Surface *screen, 
-	Field *field, Cursor *cursor) {
+	Field *field, Cursor *cursor)
+#else
+int handle_event(SDL_Event *event, SDL_Window *window, SDL_Surface *screen,
+	Field *field, Cursor *cursor)
+#endif
+{
 /* returns 1 if finished, 0 otherwise */
 	int x, y;
 	switch(event->type) {
@@ -342,26 +436,62 @@ int handle_event(SDL_Event *event, SDL_Surface *screen,
 		case SDLK_q:
 		case SDLK_ESCAPE:
 			return 1;
+#if SDL_MAJOR_VERSION < 2
 		case SDLK_KP2:
+#else
+		case SDLK_KP_2:
+#endif
 		case SDLK_DOWN:
+#if SDL_MAJOR_VERSION < 2
 			move_cursor(screen, field, cursor, 0, 1);
+#else
+			move_cursor(window, screen, field, cursor, 0, 1);
+#endif
 			return 0;
+#if SDL_MAJOR_VERSION < 2
 		case SDLK_KP8:
+#else
+		case SDLK_KP_8:
+#endif
 		case SDLK_UP:
+#if SDL_MAJOR_VERSION < 2
 			move_cursor(screen, field, cursor, 0, -1);		
+#else
+			move_cursor(window, screen, field, cursor, 0, -1);
+#endif
 			return 0;
+#if SDL_MAJOR_VERSION < 2
 		case SDLK_KP4:
+#else
+		case SDLK_KP_4:
+#endif
 		case SDLK_LEFT:
+#if SDL_MAJOR_VERSION < 2
 			move_cursor(screen, field, cursor, -1, 0);
+#else
+			move_cursor(window, screen, field, cursor, -1, 0);
+#endif
 			return 0;
+#if SDL_MAJOR_VERSION < 2
 		case SDLK_KP6:
+#else
+		case SDLK_KP_6:
+#endif
 		case SDLK_RIGHT:
+#if SDL_MAJOR_VERSION < 2
 			move_cursor(screen, field, cursor, 1, 0);
+#else
+			move_cursor(window, screen, field, cursor, 1, 0);
+#endif
 			return 0;
 		case SDLK_SPACE:
 		case SDLK_RETURN:
 		case SDLK_KP_ENTER:
+#if SDL_MAJOR_VERSION < 2
 			return turn(screen, field, cursor->x, cursor->y);
+#else
+			return turn(window, screen, field, cursor->x, cursor->y);
+#endif
 		default:
 			return 0;
 		}
@@ -375,7 +505,11 @@ int handle_event(SDL_Event *event, SDL_Surface *screen,
 			return 0;
 		x = screen2field_x(event->button.x, event->button.y);
 		y = screen2field_y(event->button.x, event->button.y);
+#if SDL_MAJOR_VERSION < 2
 		return turn(screen, field, x, y);
+#else
+		return turn(window, screen, field, x, y);
+#endif
 	case SDL_QUIT: 
 		return 1;
 	default:
@@ -384,12 +518,21 @@ int handle_event(SDL_Event *event, SDL_Surface *screen,
 }
 
 static
-void engine_loop(SDL_Surface *screen, Field *field, Cursor *cursor) {
+#if SDL_MAJOR_VERSION < 2
+void engine_loop(SDL_Surface *screen, Field *field, Cursor *cursor)
+#else
+void engine_loop(SDL_Window *window, SDL_Surface *screen, Field *field, Cursor *cursor)
+#endif
+{
 	int finished = 0;
 	SDL_Event event;
 	while (!finished) {
 		while(SDL_PollEvent(&event)) {
+#if SDL_MAJOR_VERSION < 2
 			finished = handle_event(&event, screen, field, cursor);
+#else
+			finished = handle_event(&event, window, screen, field, cursor);
+#endif
 		}
 	}
 }
@@ -397,13 +540,26 @@ void engine_loop(SDL_Surface *screen, Field *field, Cursor *cursor) {
 int main(int argc, char *argv[]) {
 	int x, y;
 	const char *path[]	= {BITMAP_PATH, "bmps/", 0};
+#if SDL_MAJOR_VERSION < 2
 	SDL_Surface *screen 	= engine_init(argc, argv);
+#else
+	SDL_Window *window 	= engine_init(argc, argv);
+	int bpp;
+	Uint32 Rmask, Gmask, Bmask, Amask;
+	SDL_Surface *screen;
+#endif
 	SDL_Surface **numbers 	= number_init(path);
 	SDL_Surface *player	= sprite(path, "player.bmp");
 	SDL_Surface *score	= sprite(path, "score.bmp");
 	SDL_Surface *title	= sprite(path, "addt.bmp");
 	Field *field 		= field_init(path, numbers);
 	Cursor *cursor		= cursor_init(path);
+
+#if ! (SDL_MAJOR_VERSION < 2)
+	SDL_PixelFormatEnumToMasks(SDL_GetWindowPixelFormat(window), &bpp, &Rmask, &Gmask, &Bmask, &Amask);
+	screen 	= SDL_CreateRGBSurface(0, 800, 600,
+				bpp, Rmask, Gmask, Bmask, Amask);
+#endif
 
 	for (x = 0; x < SIZE_X; x++) {
 		for (y = 0; y < SIZE_Y; y++) {
@@ -419,13 +575,23 @@ int main(int argc, char *argv[]) {
 		field2screen_x(7, 5) + (FIELD_WIDTH - player->w) / 2,
 		field2screen_y(7, 5) - 8 - player->h);
 	show_sprite(screen, title, 120, 95);
+#if SDL_MAJOR_VERSION < 2
 	show_cursor(screen, cursor);
+#else
+	show_cursor(window, screen, cursor);
+#endif
 	SDL_FreeSurface(score);
 	SDL_FreeSurface(player);
 	SDL_FreeSurface(title);
 
+#if SDL_MAJOR_VERSION < 2
 	SDL_UpdateRect(screen, 0, 0, 800, 600);
 	engine_loop(screen, field, cursor);
+#else
+	SDL_BlitSurface(screen, NULL, SDL_GetWindowSurface(window), NULL);
+	SDL_UpdateWindowSurface(window);
+	engine_loop(window, screen, field, cursor);
+#endif
 	
 	exit_cursor(cursor);
 	exit_field(field);
