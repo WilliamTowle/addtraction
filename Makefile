@@ -20,6 +20,19 @@ SDL_CONFIG=$(shell which sdl-config)
 endif
 endif
 
+# Configuration for SDL v2.x?
+
+ifeq (${USE_SDL_VERSION},2)
+ifneq (${USE_CUSTOM_SDL},n)
+DIR_TOOLCHAIN?=${CURDIR}/toolchain
+TRACE:=$(shell echo "DIR_TOOLCHAIN ${DIR_TOOLCHAIN}" 1>&2)
+include Makefile.SDL2
+SDL_CONFIG:=${DIR_TOOLCHAIN}/bin/sdl2-config
+else
+SDL_CONFIG=$(shell which sdl2-config)
+endif
+endif
+
 
 BITMAP_PATH = /usr/share/games/addt/
 INSTALL_PATH = /usr/bin
