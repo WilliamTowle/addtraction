@@ -367,6 +367,12 @@ int handle_event(SDL_Event *event, SDL_Surface *screen,
 		}
 	case SDL_MOUSEBUTTONDOWN:
 		if (field->open_fields <= 0) return 1;
+		if (event->button.x < field2screen_x(0,0)
+			|| event->button.y < field2screen_y(0,0))
+			return 0;
+		if (event->button.x >= field2screen_x(6,6)
+			|| event->button.y >= field2screen_y(6,6))
+			return 0;
 		x = screen2field_x(event->button.x, event->button.y);
 		y = screen2field_y(event->button.x, event->button.y);
 		return turn(screen, field, x, y);
