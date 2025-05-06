@@ -30,7 +30,7 @@
 #define ADDTRACTION_VERSION "0.001"
 #define SIZE_X 6
 #define SIZE_Y 6
-#define NAN (int)((Uint32)(1<<31))
+#define INVALID_FIELD_VALUE (int)((Uint32)(1<<31))
 
 /* If not set, clear path */
 #ifndef BITMAP_PATH
@@ -181,7 +181,7 @@ Field *field_init(const char **path, SDL_Surface **numbers) {
 	field->red = sprite(path, "red.bmp");
 	field->green = sprite(path, "green.bmp");
 	field->black = sprite(path, "black.bmp");
-	for (i = 0; i < SIZE_X * SIZE_Y; i++) field->fields[i] = NAN;
+	for (i = 0; i < SIZE_X * SIZE_Y; i++) field->fields[i] = INVALID_FIELD_VALUE;
 	field->fields[0] = 1;
 	field->fields[SIZE_Y * SIZE_X - 1] = (-1);
 	field->numbers = numbers;
@@ -206,11 +206,11 @@ void show_field(SDL_Surface *screen, Field *field, int num, int x, int y) {
 	xpos = field2screen_x(x, y);
 	ypos = field2screen_y(x, y);
 
-	if (num == 0 || num == NAN) { background = field->black; }
+	if (num == 0 || num == INVALID_FIELD_VALUE) { background = field->black; }
 	else if (num < 0) { background = field->green; }
 	else { /* num > 0 */ background = field->red; }
 	show_sprite(screen, background, xpos, ypos);
-	if (num != NAN)
+	if (num != INVALID_FIELD_VALUE)
 		show_number(screen, field->numbers, abs(num), 
 			xpos + FIELD_WIDTH / 2, ypos + FIELD_HEIGHT / 2);
 	SDL_UpdateRect(screen, xpos, ypos, FIELD_WIDTH, FIELD_HEIGHT);
@@ -219,22 +219,22 @@ void show_field(SDL_Surface *screen, Field *field, int num, int x, int y) {
 static
 int get_field(Field *field, int x, int y) {
 	if (x < 0 || x >= SIZE_X ||
-	    y < 0 || y >= SIZE_Y) return NAN;
+	    y < 0 || y >= SIZE_Y) return INVALID_FIELD_VALUE;
 	return field->fields[y * SIZE_X + x];
 }
 
 static
 int get_field_value(Field *field, int x, int y) { 
 	int result = get_field(field, x, y);
-	return (result == NAN) ? 0 : result;
+	return (result == INVALID_FIELD_VALUE) ? 0 : result;
 }
 
 static
 int set_field(Field *field, int x, int y) {
 	int num;
 	if (x < 0 || x >= SIZE_X ||
-	    y < 0 || y >= SIZE_Y) return NAN;
-	if (get_field(field, x, y) != NAN) return NAN;
+	    y < 0 || y >= SIZE_Y) return INVALID_FIELD_VALUE;
+	if (get_field(field, x, y) != INVALID_FIELD_VALUE) return INVALID_FIELD_VALUE;
 	num = 	get_field_value(field, x-1, y-1) +
 		get_field_value(field, x  , y-1) +
 		get_field_value(field, x+1, y-1) +
@@ -255,7 +255,7 @@ int turn(SDL_Surface *screen, Field *field, int x, int y) {
 	int num;
 	if (field->open_fields == 0) return 1;
 	num = set_field(field, x, y);
-	if (num == NAN) return 0;
+	if (num == INVALID_FIELD_VALUE) return 0;
 	show_field(screen, field, num, x, y);
 	show_field(screen, field, field->score, 7, 0);		
 	show_field(screen, field, field->player, 7, 5);
