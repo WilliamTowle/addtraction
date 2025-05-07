@@ -378,7 +378,7 @@ int handle_event(SDL_Event *event, SDL_Surface *screen,
 }
 
 static
-int engine_loop(SDL_Surface *screen, Field *field, Cursor *cursor) {
+void engine_loop(SDL_Surface *screen, Field *field, Cursor *cursor) {
 	int finished = 0;
 	SDL_Event event;
 	while (!finished) {
