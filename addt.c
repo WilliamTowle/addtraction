@@ -361,7 +361,7 @@ int engine_loop(SDL_Surface *screen, Field *field, Cursor *cursor) {
 
 int main(int argc, char *argv[]) {
 	int x, y;
-	char *path[3]		= {BITMAP_PATH, "bmps/", 0};
+	char *path[]		= {BITMAP_PATH, "bmps/", 0};
 	SDL_Surface *screen 	= engine_init(argc, argv);
 	SDL_Surface **numbers 	= number_init(path);
 	SDL_Surface *player	= sprite(path, "player.bmp");
