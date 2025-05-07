@@ -273,7 +273,7 @@ static
 #if SDL_MAJOR_VERSION < 2
 int turn(SDL_Surface *screen, Field *field, int x, int y)
 #else
-int turn(SDL_Window *window, SDL_Surface *screen, Field *field, int x, int y)
+int turn(SDL_Renderer *renderer, SDL_Texture *texture, SDL_Surface *screen, Field *field, int x, int y)
 #endif
 {
 	int num;
@@ -284,8 +284,10 @@ int turn(SDL_Window *window, SDL_Surface *screen, Field *field, int x, int y)
 	show_field(screen, field, field->score, 7, 0);		
 	show_field(screen, field, field->player, 7, 5);
 #if ! (SDL_MAJOR_VERSION < 2)
-	SDL_BlitSurface(screen, NULL, SDL_GetWindowSurface(window), NULL);
-	SDL_UpdateWindowSurface(window);
+	SDL_UpdateTexture(texture, NULL, screen->pixels, screen->pitch);
+	SDL_RenderClear(renderer);
+	SDL_RenderCopy(renderer, texture, NULL, NULL);
+	SDL_RenderPresent(renderer);
 #endif
 	return 0;
 }
@@ -315,7 +317,7 @@ static
 #if SDL_MAJOR_VERSION < 2
 void show_cursor(SDL_Surface *screen, Cursor *c)
 #else
-void show_cursor(SDL_Window *window, SDL_Surface *screen, Cursor *c)
+void show_cursor(SDL_Renderer *renderer, SDL_Texture *texture, SDL_Surface *screen, Cursor *c)
 #endif
 {
 	int x = field2screen_x(c->x, c->y) + (FIELD_WIDTH - c->visual->w) / 2;
@@ -324,8 +326,10 @@ void show_cursor(SDL_Window *window, SDL_Surface *screen, Cursor *c)
 #if SDL_MAJOR_VERSION < 2
 	SDL_UpdateRect(screen, x, y, c->visual->w, c->visual->h);
 #else
-	SDL_BlitSurface(screen, NULL, SDL_GetWindowSurface(window), NULL);
-	SDL_UpdateWindowSurface(window);
+	SDL_UpdateTexture(texture, NULL, screen->pixels, screen->pitch);
+	SDL_RenderClear(renderer);
+	SDL_RenderCopy(renderer, texture, NULL, NULL);
+	SDL_RenderPresent(renderer);
 #endif
 }
 
@@ -333,13 +337,15 @@ static
 #if SDL_MAJOR_VERSION < 2
 void hide_cursor(SDL_Surface *s, Field *field, Cursor *c)
 #else
-void hide_cursor(SDL_Window *w, SDL_Surface *s, Field *field, Cursor *c)
+void hide_cursor(SDL_Renderer *renderer, SDL_Texture *texture, SDL_Surface *s, Field *field, Cursor *c)
 #endif
 {
 	show_field(s, field, get_field(field, c->x, c->y), c->x, c->y);
 #if ! (SDL_MAJOR_VERSION < 2)
-	SDL_BlitSurface(s, NULL, SDL_GetWindowSurface(w), NULL);
-	SDL_UpdateWindowSurface(w);
+	SDL_UpdateTexture(texture, NULL, s->pixels, s->pitch);
+	SDL_RenderClear(renderer);
+	SDL_RenderCopy(renderer, texture, NULL, NULL);
+	SDL_RenderPresent(renderer);
 #endif
 }
 
@@ -348,14 +354,14 @@ static
 void move_cursor(SDL_Surface *screen, Field *field, Cursor *cursor, 
 	int dx, int dy)
 #else
-void move_cursor(SDL_Window *window, SDL_Surface *screen, Field *field, Cursor *cursor,
+void move_cursor(SDL_Renderer *renderer, SDL_Texture *texture, SDL_Surface *screen, Field *field, Cursor *cursor,
 	int dx, int dy)
 #endif
 {
 #if SDL_MAJOR_VERSION < 2
 	hide_cursor(screen, field, cursor);
 #else
-	hide_cursor(window, screen, field, cursor);
+	hide_cursor(renderer, texture, screen, field, cursor);
 #endif
 	cursor->x += dx;
 	cursor->y += dy;
@@ -366,7 +372,7 @@ void move_cursor(SDL_Window *window, SDL_Surface *screen, Field *field, Cursor *
 #if SDL_MAJOR_VERSION < 2
 	show_cursor(screen, cursor);
 #else
-	show_cursor(window, screen, cursor);
+	show_cursor(renderer, texture, screen, cursor);
 #endif
 	printf("(%i,%i)\n", cursor->x, cursor->y);
 }
@@ -382,9 +388,9 @@ SDL_Window *engine_init(int argc, char *argv[])
 #if SDL_MAJOR_VERSION < 2
 	int videoflags = SDL_HWSURFACE | SDL_ANYFORMAT;
 #endif
+#if SDL_MAJOR_VERSION < 2
 	int width = 800;
 	int height = 600;
-#if SDL_MAJOR_VERSION < 2
 	int bpp = 16;
 	SDL_Surface *screen;
 #else
@@ -404,10 +410,10 @@ SDL_Window *engine_init(int argc, char *argv[])
 	window = SDL_CreateWindow("AddTraction",
 		SDL_WINDOWPOS_UNDEFINED,
 		SDL_WINDOWPOS_UNDEFINED,
-		width, height,
+		0, 0,   /* width, height, */
 		SDL_WINDOW_FULLSCREEN_DESKTOP);
 	if (!window) {
-		fprintf(stderr,"Couldn't create window: %s\n", SDL_GetError());
+		fprintf(stderr,"Couldn't SDL_CreateWindow(): %s\n", SDL_GetError());
 		exit(2);
 	}
 #endif
@@ -424,7 +430,7 @@ static
 int handle_event(SDL_Event *event, SDL_Surface *screen, 
 	Field *field, Cursor *cursor)
 #else
-int handle_event(SDL_Event *event, SDL_Window *window, SDL_Surface *screen,
+int handle_event(SDL_Event *event, SDL_Renderer *renderer, SDL_Texture *texture, SDL_Surface *screen,
 	Field *field, Cursor *cursor)
 #endif
 {
@@ -445,7 +451,7 @@ int handle_event(SDL_Event *event, SDL_Window *window, SDL_Surface *screen,
 #if SDL_MAJOR_VERSION < 2
 			move_cursor(screen, field, cursor, 0, 1);
 #else
-			move_cursor(window, screen, field, cursor, 0, 1);
+			move_cursor(renderer, texture, screen, field, cursor, 0, 1);
 #endif
 			return 0;
 #if SDL_MAJOR_VERSION < 2
@@ -457,7 +463,7 @@ int handle_event(SDL_Event *event, SDL_Window *window, SDL_Surface *screen,
 #if SDL_MAJOR_VERSION < 2
 			move_cursor(screen, field, cursor, 0, -1);		
 #else
-			move_cursor(window, screen, field, cursor, 0, -1);
+			move_cursor(renderer, texture, screen, field, cursor, 0, -1);
 #endif
 			return 0;
 #if SDL_MAJOR_VERSION < 2
@@ -469,7 +475,7 @@ int handle_event(SDL_Event *event, SDL_Window *window, SDL_Surface *screen,
 #if SDL_MAJOR_VERSION < 2
 			move_cursor(screen, field, cursor, -1, 0);
 #else
-			move_cursor(window, screen, field, cursor, -1, 0);
+			move_cursor(renderer, texture, screen, field, cursor, -1, 0);
 #endif
 			return 0;
 #if SDL_MAJOR_VERSION < 2
@@ -481,7 +487,7 @@ int handle_event(SDL_Event *event, SDL_Window *window, SDL_Surface *screen,
 #if SDL_MAJOR_VERSION < 2
 			move_cursor(screen, field, cursor, 1, 0);
 #else
-			move_cursor(window, screen, field, cursor, 1, 0);
+			move_cursor(renderer, texture, screen, field, cursor, 1, 0);
 #endif
 			return 0;
 		case SDLK_SPACE:
@@ -490,7 +496,7 @@ int handle_event(SDL_Event *event, SDL_Window *window, SDL_Surface *screen,
 #if SDL_MAJOR_VERSION < 2
 			return turn(screen, field, cursor->x, cursor->y);
 #else
-			return turn(window, screen, field, cursor->x, cursor->y);
+			return turn(renderer, texture, screen, field, cursor->x, cursor->y);
 #endif
 		default:
 			return 0;
@@ -508,7 +514,7 @@ int handle_event(SDL_Event *event, SDL_Window *window, SDL_Surface *screen,
 #if SDL_MAJOR_VERSION < 2
 		return turn(screen, field, x, y);
 #else
-		return turn(window, screen, field, x, y);
+		return turn(renderer, texture, screen, field, x, y);
 #endif
 	case SDL_QUIT: 
 		return 1;
@@ -521,7 +527,7 @@ static
 #if SDL_MAJOR_VERSION < 2
 void engine_loop(SDL_Surface *screen, Field *field, Cursor *cursor)
 #else
-void engine_loop(SDL_Window *window, SDL_Surface *screen, Field *field, Cursor *cursor)
+void engine_loop(SDL_Renderer *renderer, SDL_Texture *texture, SDL_Surface *screen, Field *field, Cursor *cursor)
 #endif
 {
 	int finished = 0;
@@ -531,7 +537,7 @@ void engine_loop(SDL_Window *window, SDL_Surface *screen, Field *field, Cursor *
 #if SDL_MAJOR_VERSION < 2
 			finished = handle_event(&event, screen, field, cursor);
 #else
-			finished = handle_event(&event, window, screen, field, cursor);
+			finished = handle_event(&event, renderer, texture, screen, field, cursor);
 #endif
 		}
 	}
@@ -547,6 +553,8 @@ int main(int argc, char *argv[]) {
 	int bpp;
 	Uint32 Rmask, Gmask, Bmask, Amask;
 	SDL_Surface *screen;
+	SDL_Renderer *renderer;
+	SDL_Texture *texture;
 #endif
 	SDL_Surface **numbers 	= number_init(path);
 	SDL_Surface *player	= sprite(path, "player.bmp");
@@ -559,6 +567,11 @@ int main(int argc, char *argv[]) {
 	SDL_PixelFormatEnumToMasks(SDL_GetWindowPixelFormat(window), &bpp, &Rmask, &Gmask, &Bmask, &Amask);
 	screen 	= SDL_CreateRGBSurface(0, 800, 600,
 				bpp, Rmask, Gmask, Bmask, Amask);
+	renderer = SDL_CreateRenderer(window, -1, 0);
+	texture = SDL_CreateTexture(renderer,
+				SDL_PIXELFORMAT_ARGB8888,
+				SDL_TEXTUREACCESS_STREAMING,
+				800, 600);
 #endif
 
 	for (x = 0; x < SIZE_X; x++) {
@@ -578,7 +591,7 @@ int main(int argc, char *argv[]) {
 #if SDL_MAJOR_VERSION < 2
 	show_cursor(screen, cursor);
 #else
-	show_cursor(window, screen, cursor);
+	show_cursor(renderer, texture, screen, cursor);
 #endif
 	SDL_FreeSurface(score);
 	SDL_FreeSurface(player);
@@ -588,9 +601,11 @@ int main(int argc, char *argv[]) {
 	SDL_UpdateRect(screen, 0, 0, 800, 600);
 	engine_loop(screen, field, cursor);
 #else
-	SDL_BlitSurface(screen, NULL, SDL_GetWindowSurface(window), NULL);
-	SDL_UpdateWindowSurface(window);
-	engine_loop(window, screen, field, cursor);
+	SDL_UpdateTexture(texture, NULL, screen->pixels, screen->pitch);
+	SDL_RenderClear(renderer);
+	SDL_RenderCopy(renderer, texture, NULL, NULL);
+	SDL_RenderPresent(renderer);
+	engine_loop(renderer, texture, screen, field, cursor);
 #endif
 	
 	exit_cursor(cursor);
