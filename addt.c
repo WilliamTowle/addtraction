@@ -335,7 +335,7 @@ static
 int handle_event(SDL_Event *event, SDL_Surface *screen, 
 	Field *field, Cursor *cursor) {
 /* returns 1 if finished, 0 otherwise */
-	int x, y, num;
+	int x, y;
 	switch(event->type) {
 	case SDL_KEYDOWN:
 		switch (event->key.keysym.sym) {
