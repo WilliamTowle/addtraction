@@ -246,7 +246,7 @@ int set_field(Field *field, int x, int y) {
 	field->fields[y * SIZE_X + x] = num;
 	field->open_fields--;
 	field->score += num;
-	field->player = -1 - field->player;
+	field->player = (field->player == 1)? 2 : 1;
 	return num;
 }
 
